@@ -1,0 +1,7 @@
+For compiling assembly in wsl2:
+
+sudo apt install g++-aarch64-linux-gnu qemu-user-static qemu-user
+
+aarch64-linux-gnu-g++ main.cpp assemb.s -o main.exe -static
+
+qemu-aarch64 ./main.exe
