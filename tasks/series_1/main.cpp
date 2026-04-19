@@ -26,9 +26,9 @@ int main() {
 
     std::cout << "Original Matrices:" << std::endl;
     for (int k = 0; k < c; ++k) {
-        for (int i = 0; i < b; ++i) {
-            for (int j = 0; j < a; ++j) {
-                std::cout << matrix[k*b*a + i * a + j] << " ";
+        for (int j = 0; j < b; ++j) {
+            for (int i = 0; i < a; ++i) {
+                std::cout << matrix[k*b*a + j * a + i] << " ";
             }
             std::cout << std::endl;
         }
