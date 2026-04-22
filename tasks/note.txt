@@ -4,4 +4,14 @@ sudo apt install g++-aarch64-linux-gnu qemu-user-static qemu-user
 
 aarch64-linux-gnu-g++ main.cpp assemb.s -o main.exe -static
 
+options:
+- sve-default-vector-length=64 (in bytes)
+
 qemu-aarch64 ./main.exe
+
+
+For logging in to fedora:
+
+ssh fedora@3.17.207.122
+
+ssh mlcXX@3.17.207.122
