@@ -51,8 +51,6 @@ void gemm_ref_mnk(float const *a, float const *b, float *c, uint m, uint n,
   }
 }
 
-
-
 void benchmark_kernel(const std::string &kernel_name, gemm_kernel_func kernel,
                       float const *a, float const *b, float *c, float *c_ref,
                       uint m, uint n, uint k, uint reps) {
@@ -113,8 +111,8 @@ int main() {
   for (int i = 0; i < 32 * 6; i++)
     c_ref_k1[i] = c_k1[i]; // Sync C and C_ref
 
-  benchmark_kernel("gemm_32_6_1", gemm_1_32_6, a_k1, b_k1, c_k1,
-                   c_ref_k1, 32, 6, 1, reps);
+  benchmark_kernel("gemm_32_6_1", gemm_1_32_6, a_k1, b_k1, c_k1, c_ref_k1, 32,
+                   6, 1, reps);
 
   // =========================================================
   // TEST 2: The K=64 Kernel
@@ -131,8 +129,8 @@ int main() {
   for (int i = 0; i < 32 * 6; i++)
     c_ref_k64[i] = c_k64[i]; // Sync C and C_ref
 
-  benchmark_kernel("gemm_32_6_64", gemm_64_32_6, a_k64, b_k64, c_k64,
-                   c_ref_k64, 32, 6, 64, reps);
+  benchmark_kernel("gemm_32_6_64", gemm_64_32_6, a_k64, b_k64, c_k64, c_ref_k64,
+                   32, 6, 64, reps);
 
   // =========================================================
   // TEST 3: The K=1, a=31 Micro-Kernel
