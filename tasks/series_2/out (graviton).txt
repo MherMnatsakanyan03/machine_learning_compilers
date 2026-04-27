@@ -1,0 +1,21 @@
+[mlc04@c7g-large series_2]$ g++ -march=armv8-a+sve driver.cpp gemm_*
+[mlc04@c7g-large series_2]$ ./a.out 
+Testing gemm_32_6_1 kernel
+  maximum difference: 1.19209e-07
+  duration: 0.000945312 seconds
+  GFLOPS: 20.3108
+
+Testing gemm_32_6_64 kernel
+  maximum difference: 1.90735e-06
+  duration: 0.00228611 seconds
+  GFLOPS: 53.7508
+
+Testing gemm_31_6_1 kernel
+  maximum difference: 1.19209e-07
+  duration: 0.00108969 seconds
+  GFLOPS: 17.0691
+
+Testing gemm_31_6_64 kernel
+  maximum difference: 3.8147e-06
+  duration: 0.00225187 seconds
+  GFLOPS: 52.8627
