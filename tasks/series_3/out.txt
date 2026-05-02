@@ -1,0 +1,6 @@
+edward:series_3 mlc04$ g++ -std=c++17 driver.cpp gemm_512_16_16.s -march=armv9-a+sme
+edward:series_3 mlc04$ ./a.out 
+Testing gemm_512_16_16 kernel
+  maximum difference: 0
+  duration: 2.86562 seconds
+  GFLOPS: 457.394

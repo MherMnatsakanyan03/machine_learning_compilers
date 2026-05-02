@@ -1,3 +1,4 @@
+#include <omp.h>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -90,9 +91,61 @@ void benchmark_kernel(const std::string &kernel_name, gemm_kernel_func kernel,
   std::cout << "  GFLOPS: " << gflops << "\n\n";
 }
 
+// Notice a_all and b_all are no longer const here so we can fill them randomly!
+void benchmark_multicore_gemm(const std::string &kernel_name, gemm_kernel_func kernel, 
+                              float *a_all, float *b_all, float *c_all, float *c_ref_all,
+                              uint total_blocks, uint m, uint n, uint k, uint reps) {
+    
+    std::cout << "Testing: " << kernel_name << " (Multi-Core)\n";
+    std::cout << "Total 16x16 Blocks: " << total_blocks << "\n";
+
+    fill_random(a_all, total_blocks * m * k);
+    fill_random(b_all, total_blocks * k * n);
+    fill_random(c_all, total_blocks * m * n);
+    for (size_t i = 0; i < total_blocks * m * n; i++) {
+        c_ref_all[i] = c_all[i]; // Sync C and C_ref
+    }
+
+    // Check just the first block to ensure math is correct
+    gemm_ref_mnk(&a_all[0], &b_all[0], &c_ref_all[0], m, n, k, m, n, m);
+    kernel(&a_all[0], &b_all[0], &c_all[0], k);
+    
+    float max_diff = calc_max_diff(&c_ref_all[0], &c_all[0], m, n, m);
+    std::cout << "  maximum difference: " << max_diff << "\n";
+
+    // benchmarking
+    std::cout << "  Running benchmark on " << omp_get_max_threads() << " threads...\n";
+    
+    auto start = std::chrono::steady_clock::now();
+    
+    for (uint rep = 0; rep < reps; rep++) {
+        #pragma omp parallel for
+        for (uint b = 0; b < total_blocks; b++) {
+            // Calculate starting pointers for this specific core's bloc
+            float const *a_block = &a_all[b * (m * k)];
+            float const *b_block = &b_all[b * (k * n)];
+            float *c_block = &c_all[b * (m * n)];
+
+            kernel(a_block, b_block, c_block, k);
+        }
+    }
+    
+    auto stop = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration = stop - start;
+
+    // (Total Blocks) * (M * N * K) * (2 ops: multiply + add) * Repetitions
+    double total_flops = (double)total_blocks * m * n * k * 2.0 * reps;
+    double gflops = (total_flops / 1.0E9) / duration.count();
+
+    std::cout << "  duration: " << duration.count() << " seconds\n";
+    std::cout << "  GFLOPS:   " << gflops << "\n\n";
+}
+
 int main() {
   srand48(time(NULL));
-  uint reps = 50000;
+
+  // TEST 1: The Single Core Kernel
+  uint reps_single = 500000;
 
   float a[16 * 512];
   float b[512 * 16];
@@ -103,10 +156,29 @@ int main() {
   fill_random(b, 512 * 16);
   fill_random(c, 16 * 16);
   for (int i = 0; i < 16 * 16; i++)
-    c_ref[i] = c[i]; // Sync C and C_ref
+    c_ref[i] = c[i]; 
 
-  benchmark_kernel("gemm_512_16_16", gemm_512_16_16, a, b, c, c_ref, 16,
-                   16, 512, reps);
+  benchmark_kernel("gemm_512_16_16 (Single)", gemm_512_16_16, a, b, c, c_ref, 16,
+                   16, 512, reps_single);
+
+
+  // TEST 2: The Multi-Core Kernel
+  uint total_blocks = 1024;
+  uint reps_multi = 1000; 
+
+  float *a_mc = new float[total_blocks * 16 * 512];
+  float *b_mc = new float[total_blocks * 512 * 16];
+  float *c_mc = new float[total_blocks * 16 * 16];
+  float *c_ref_mc = new float[total_blocks * 16 * 16];
+
+  benchmark_multicore_gemm("gemm_512_16_16", gemm_512_16_16, a_mc, b_mc, c_mc, c_ref_mc,
+                           total_blocks, 16, 16, 512, reps_multi);
+
+  // Clean up the heap memory
+  delete[] a_mc;
+  delete[] b_mc;
+  delete[] c_mc;
+  delete[] c_ref_mc;
 
   return EXIT_SUCCESS;
 }

@@ -1,5 +1,4 @@
 .text
-    .type _gemm_512_16_16, %function
     .global _gemm_512_16_16
 
 _gemm_512_16_16:
@@ -13,7 +12,7 @@ _gemm_512_16_16:
     stp x29, x30, [sp, #-16]!
     mov x29, sp
 
-    smstart za
+    smstart
     ptrue p0.s
 
     // load C
@@ -68,7 +67,7 @@ _gemm_512_16_16:
     cmp w12, #16
     b.lt .Lstore_c
 
-    smstop za
+    smstop
 
     ldp x29, x30, [sp], #16
 
