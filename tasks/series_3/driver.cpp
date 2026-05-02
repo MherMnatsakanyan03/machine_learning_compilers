@@ -91,7 +91,6 @@ void benchmark_kernel(const std::string &kernel_name, gemm_kernel_func kernel,
   std::cout << "  GFLOPS: " << gflops << "\n\n";
 }
 
-// Notice a_all and b_all are no longer const here so we can fill them randomly!
 void benchmark_multicore_gemm(const std::string &kernel_name, gemm_kernel_func kernel, 
                               float *a_all, float *b_all, float *c_all, float *c_ref_all,
                               uint total_blocks, uint m, uint n, uint k, uint reps) {
@@ -121,9 +120,8 @@ void benchmark_multicore_gemm(const std::string &kernel_name, gemm_kernel_func k
     for (uint rep = 0; rep < reps; rep++) {
         #pragma omp parallel for
         for (uint b = 0; b < total_blocks; b++) {
-            // Calculate starting pointers for this specific core's bloc
-            float const *a_block = &a_all[b * (m * k)];
-            float const *b_block = &b_all[b * (k * n)];
+            float const *a_block = &a_all[0];
+            float const *b_block = &b_all[0];
             float *c_block = &c_all[b * (m * n)];
 
             kernel(a_block, b_block, c_block, k);
@@ -163,7 +161,7 @@ int main() {
 
 
   // TEST 2: The Multi-Core Kernel
-  uint total_blocks = 1024;
+  uint total_blocks = 16384;
   uint reps_multi = 1000; 
 
   float *a_mc = new float[total_blocks * 16 * 512];

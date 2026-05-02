@@ -1,6 +1,13 @@
-edward:series_3 mlc04$ g++ -std=c++17 driver.cpp gemm_512_16_16.s -march=armv9-a+sme
-edward:series_3 mlc04$ ./a.out 
-Testing gemm_512_16_16 kernel
+edward:series_3 mlc04$ g++ -std=c++17 driver.cpp gemm_512_16_16.s -o a.exe -march=armv9-a+sme -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include -L/opt/homebrew/opt/libomp/lib -lomp
+edward:series_3 mlc04$ ./a.exe 
+Testing gemm_512_16_16 (Single) kernel
   maximum difference: 0
-  duration: 2.86562 seconds
-  GFLOPS: 457.394
+  duration: 0.296871 seconds
+  GFLOPS: 441.511
+
+Testing: gemm_512_16_16 (Multi-Core)
+Total 16x16 Blocks: 16384
+  maximum difference: 0
+  Running benchmark on 4 threads...
+  duration: 4.53217 seconds
+  GFLOPS:   947.663
