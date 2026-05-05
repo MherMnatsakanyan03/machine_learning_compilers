@@ -30,3 +30,19 @@ Total 16x16 Blocks: 1024
   Running benchmark on 10 threads...
   duration: 2.00042 seconds
   GFLOPS:   1341.9
+
+---
+With even more slop (removing prologue/epilogue):
+
+edward:series_3 mlc04$ ./a.exe 
+Testing gemm_512_16_16 (Single) kernel
+  maximum difference: 0
+  duration: 0.284546 seconds
+  GFLOPS: 460.636
+
+Testing: gemm_512_16_16 (Multi-Core)
+Total 16x16 Blocks: 1024
+  maximum difference: 0
+  Running benchmark on 10 threads...
+  duration: 2.04688 seconds
+  GFLOPS:   1311.44
