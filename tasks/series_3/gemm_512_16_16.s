@@ -12,7 +12,7 @@ _gemm_512_16_16:
     stp x29, x30, [sp, #-16]!
     mov x29, sp
 
-    smstart
+    // smstart
     ptrue p0.s
 
     // load C
@@ -67,7 +67,7 @@ _gemm_512_16_16:
     cmp w12, #16
     b.lt .Lstore_c
 
-    smstop
+    // smstop
 
     ldp x29, x30, [sp], #16
 
