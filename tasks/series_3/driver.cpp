@@ -12,6 +12,21 @@ extern "C"
   void gemm_512_16_16(float const *a, float const *b, float *c, uint k);
 }
 
+inline void sme_init()
+{
+  // Enter streaming mode and set p0 to all-true for 32-bit elements
+  asm volatile(
+      "smstart\n\t"
+      "ptrue p0.s\n\t"
+      ::: "memory", "cc");
+}
+
+inline void sme_cleanup()
+{
+  // Exit streaming mode
+  asm volatile("smstop\n\t" ::: "memory", "cc");
+}
+
 void fill_random(float *arr, size_t size)
 {
   for (size_t i = 0; i < size; ++i)
@@ -77,9 +92,9 @@ void benchmark_kernel(const std::string &kernel_name, gemm_kernel_func kernel,
 
   // Run assembly kernel
 
-  asm volatile("smstart" ::: "memory");
+  sme_init();
   kernel(a, b, c, k);
-  asm volatile("smstop" ::: "memory");
+  sme_cleanup();
 
   // Check correctness
   float max_diff = calc_max_diff(c_ref, c, m, n, ldc);
@@ -87,14 +102,14 @@ void benchmark_kernel(const std::string &kernel_name, gemm_kernel_func kernel,
 
   // Time the kernel
   auto start = std::chrono::steady_clock::now();
-  asm volatile("smstart" ::: "memory");
+  sme_init();
 
   for (uint rep = 0; rep < reps; rep++)
   {
     kernel(a, b, c, k);
   }
 
-  asm volatile("smstop" ::: "memory");
+  sme_cleanup();
 
   auto stop = std::chrono::steady_clock::now();
 
@@ -131,9 +146,9 @@ void benchmark_multicore_gemm(const std::string &kernel_name, gemm_kernel_func k
   // Check just the first block to ensure math is correct
   gemm_ref_mnk(&a_all[0], &b_all[0], &c_ref_all[0], m, n, k, m, n, m);
 
-  asm volatile("smstart" ::: "memory");
+  sme_init();
   kernel(&a_all[0], &b_all[0], &c_all[0], k);
-  asm volatile("smstop" ::: "memory");
+  sme_cleanup();
 
   float max_diff = calc_max_diff(&c_ref_all[0], &c_all[0], m, n, m);
   std::cout << "  maximum difference: " << max_diff << "\n";
@@ -146,7 +161,7 @@ void benchmark_multicore_gemm(const std::string &kernel_name, gemm_kernel_func k
 #pragma omp parallel
     {
       // Every thread independently enters Streaming Mode
-      asm volatile("smstart" ::: "memory");
+      sme_init();
 
       for (uint rep = 0; rep < reps; rep++)
       {
@@ -161,7 +176,7 @@ void benchmark_multicore_gemm(const std::string &kernel_name, gemm_kernel_func k
         }
       }
 
-      asm volatile("smstop" ::: "memory");
+      sme_cleanup();
     }
 
     auto stop = std::chrono::steady_clock::now();
