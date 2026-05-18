@@ -128,3 +128,31 @@ void MiniJit::Kernel::write(char const *path) const
 	l_out.write(reinterpret_cast<char const *>(m_buffer.data()),
 				m_buffer.size() * 4);
 }
+
+MiniJit::Kernel::Label MiniJit::Kernel::get_label() const
+{
+    // The next instruction added will be at the current size index
+    return m_buffer.size();
+}
+
+int32_t MiniJit::Kernel::calc_offset(Label target) const
+{
+    // Offset = Target Index - Current Branch Index
+    // (We cast to int32_t because backward branches are negative!)
+    return static_cast<int32_t>(target) - static_cast<int32_t>(m_buffer.size());
+}
+
+void MiniJit::Kernel::patch_instruction(Label branch_idx, uint32_t new_inst)
+{
+    if (branch_idx < m_buffer.size())
+    {
+        m_buffer[branch_idx] = new_inst;
+    }
+}
+
+void MiniJit::Kernel::add_instrs(const std::vector<uint32_t>& instrs)
+{
+    // Pre-allocate memory to avoid multiple re-allocations
+    m_buffer.reserve(m_buffer.size() + instrs.size());
+    m_buffer.insert(m_buffer.end(), instrs.begin(), instrs.end());
+}

@@ -1,4 +1,4 @@
-#include "InstGen.h"
+#include "Asm.h"
 #include <iostream>
 
 using gpr_t = MiniJit::Asm::gpr_t;

@@ -68,12 +68,38 @@ public:
 	Kernel(Kernel &&) noexcept = delete;
 	Kernel &operator=(Kernel &&) noexcept = delete;
 
+	//! Represents a location in the instruction buffer
+    using Label = std::size_t;
+
+    /**
+     * @brief Gets the current position in the code buffer.
+     * Use this to mark jump targets (like .Lloop or .Lend)
+     **/
+    Label get_label() const;
+
+    /**
+     * @brief Calculates the instruction offset from the current end of the buffer to a target label.
+     **/
+    int32_t calc_offset(Label target) const;
+
+    /**
+     * @brief Overwrites an instruction at a specific index (used for backpatching forward branches).
+     **/
+    void patch_instruction(Label branch_idx, uint32_t new_inst);
+
 	/**
 	 * Adds an instruction to the code buffer.
 	 *
 	 * @param ins instruction which is added.
 	 **/
 	void add_instr(uint32_t ins);
+
+	/**
+     * @brief Adds a vector of instructions to the code buffer.
+     * 
+     * @param instrs vector of instructions.
+     **/
+    void add_instrs(const std::vector<uint32_t>& instrs);
 
 	/**
 	 * Gets the size of the code buffer.

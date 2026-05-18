@@ -123,6 +123,27 @@ namespace MiniJit::Asm
 		d2 = 0x40400000
 	};
 
+	//! branch conditions
+	enum bcond_t : uint32_t
+	{
+		eq = 0,
+		ne = 1,
+		cs = 2,
+		cc = 3,
+		mi = 4,
+		pl = 5,
+		vs = 6,
+		vc = 7,
+		hi = 8,
+		ls = 9,
+		ge = 10,
+		lt = 11,
+		gt = 12,
+		le = 13,
+		al = 14,
+		nv = 15
+	};
+
 	/* ================================================== Instructions ================================================== */
 	namespace Base
 	{
@@ -131,7 +152,7 @@ namespace MiniJit::Asm
 		 *
 		 * @return instruction.
 		 */
-		uint32_t ret(gpr_t reg);
+		uint32_t ret(gpr_t reg = gpr_t::x30);
 
 		/**
 		 * @brief Generates a CBNZ instruction.
@@ -152,19 +173,19 @@ namespace MiniJit::Asm
 		 *
 		 * @return instruction.
 		 **/
-		uint32_t br_cmp(gpr_t reg,
-						int32_t imm19);
+		uint32_t cmp(gpr_t reg,
+					 int32_t imm19);
 
 		/**
-		 * @brief Generates a BLE instruction.
+		 * @brief Generates a CMP instruction.
 		 *
-		 * @param reg general-purpose register.
 		 * @param imm19 immediate value (not the offset bytes!).
+		 * @param cond condition code.
 		 *
 		 * @return instruction.
-		 */
-		uint32_t br_le(gpr_t reg,
-					   int32_t imm19);
+		 **/
+		uint32_t b_cond(int32_t imm19,
+						bcond_t cond);
 
 		/**
 		 * @brief Generates a MOV (immediate) instruction.
@@ -178,6 +199,17 @@ namespace MiniJit::Asm
 					  int64_t imm);
 
 		/**
+		 * @brief Generates a MOV (register) instruction.
+		 *
+		 * @param reg_dest general-purpose register.
+		 * @param reg_src general-purpose register.
+		 *
+		 * @return instruction.
+		 */
+		u_int32_t mov(gpr_t reg_dest,
+					  gpr_t reg_src);
+
+		/**
 		 * @brief Generates an ADD (immediate) instruction.
 		 *
 		 * @param reg_dest destination register.
@@ -187,6 +219,19 @@ namespace MiniJit::Asm
 		 * @return instruction.
 		 */
 		u_int32_t add(gpr_t reg_dest,
+					  gpr_t reg_src1,
+					  int64_t imm);
+
+		/**
+		 * @brief Generates an SUB (immediate) instruction.
+		 *
+		 * @param reg_dest destination register.
+		 * @param reg_src1 source register.
+		 * @param imm immediate value.
+		 *
+		 * @return instruction.
+		 */
+		u_int32_t sub(gpr_t reg_dest,
 					  gpr_t reg_src1,
 					  int64_t imm);
 
