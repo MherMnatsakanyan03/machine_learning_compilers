@@ -223,22 +223,26 @@ namespace MiniJit::Asm
 		 * @brief Generates a LDR instruction.
 		 *
 		 * @param reg_dest destination register.
+		 * @param reg_base base pointer register.
 		 * @param imm immediate value (not the offset bytes!).
 		 *
 		 * @return instruction.
 		 */
 		u_int32_t ldr(simd_fp_t reg_dest,
+					  gpr_t reg_base,
 					  int64_t imm);
 
 		/**
 		 * @brief Generates a STR instruction.
 		 *
 		 * @param reg_src source register.
+		 * @param reg_base base pointer register.
 		 * @param imm immediate value (not the offset bytes!).
 		 *
 		 * @return instruction.
 		 */
 		u_int32_t str(simd_fp_t reg_src,
+					  gpr_t reg_base,
 					  int64_t imm);
 
 		/**
