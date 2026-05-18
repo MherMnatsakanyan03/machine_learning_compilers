@@ -31,7 +31,7 @@ int main()
 
 	// FMLA (vector)
 	std::cout << "fmla v16.2s, v29.2s, v2.2s" << std::endl;
-	l_ins = Asm::Neon::fmla_dp(simd_fp_t::v16,
+	l_ins = Asm::SIMD::fmla_dp(simd_fp_t::v16,
 							   simd_fp_t::v29,
 							   simd_fp_t::v2,
 							   arr_spec_t::s2);
@@ -42,7 +42,7 @@ int main()
 
 	// FMLA (vector)
 	std::cout << "fmla v5.2d, v3.2d, v22.2d" << std::endl;
-	l_ins = Asm::Neon::fmla_dp(simd_fp_t::v5,
+	l_ins = Asm::SIMD::fmla_dp(simd_fp_t::v5,
 							   simd_fp_t::v3,
 							   simd_fp_t::v22,
 							   arr_spec_t::d2);
@@ -53,7 +53,7 @@ int main()
 
 	// FMLA (vector)
 	std::cout << "fmla v9.4s, v31.4s, v1.4s" << std::endl;
-	l_ins = Asm::Neon::fmla_dp(simd_fp_t::v9,
+	l_ins = Asm::SIMD::fmla_dp(simd_fp_t::v9,
 							   simd_fp_t::v31,
 							   simd_fp_t::v1,
 							   arr_spec_t::s4);

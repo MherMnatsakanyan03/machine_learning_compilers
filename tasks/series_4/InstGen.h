@@ -142,7 +142,7 @@ namespace MiniJit::Asm
 		 * @return instruction.
 		 **/
 		uint32_t cbnz(gpr_t reg,
-						 int32_t imm19);
+					  int32_t imm19);
 
 		/**
 		 * @brief Generates a CMP instruction.
@@ -217,7 +217,7 @@ namespace MiniJit::Asm
 					  int64_t imm);
 	}
 
-	namespace Neon
+	namespace SIMD
 	{
 		/**
 		 * @brief Generates a LDR instruction.
@@ -285,6 +285,16 @@ namespace MiniJit::Asm
 					  simd_fp_t reg_src1,
 					  simd_fp_t reg_src2,
 					  arr_spec_t arr_spec);
+	}
+
+	namespace SVE
+	{
+
+	}
+
+	namespace SME
+	{
+
 	}
 
 	/* ================================================= Helper Function ================================================ */

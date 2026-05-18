@@ -154,8 +154,78 @@ namespace MiniJit::Asm
 
 	/* ====================================================== Neon ====================================================== */
 
-	namespace Neon
+	namespace SIMD
 	{
+		uint32_t ldr(simd_fp_t reg_dest, gpr_t reg_base, int64_t imm)
+		{
+			// SIMD Unsigned Offset Load (128-bit Q-register)
+			// ARM Doc: size[31:30]=00 | 111 101 | opc[23:22]=11 | imm12[21:10] | Rn[9:5] | Rt[4:0]
+			uint32_t l_ins = 0b00'111101'11'000000000000'00000'00000;
+
+			uint32_t l_rt = reg_dest & 0x1F;
+			uint32_t l_rn = reg_base & 0x1F;
+
+			// Q-registers are 128-bit (16 bytes). Scale = 2^4.
+			uint32_t l_scale = 4;
+			uint64_t l_byte_size = 1ULL << l_scale;
+
+			if (__builtin_expect(imm < 0, 0))
+			{
+				throw std::invalid_argument("SIMD LDR: immediate offset cannot be negative.");
+			}
+			if (__builtin_expect((imm & (l_byte_size - 1)) != 0, 0))
+			{
+				throw std::invalid_argument("SIMD LDR: immediate offset must be 16-byte aligned.");
+			}
+
+			uint64_t l_scaled_imm = imm >> l_scale;
+			if (__builtin_expect(l_scaled_imm > 0xFFF, 0))
+			{
+				throw std::invalid_argument("SIMD LDR: immediate offset exceeds maximum encoded range.");
+			}
+
+			l_ins |= (l_scaled_imm << 10);
+			l_ins |= (l_rn << 5);
+			l_ins |= l_rt;
+
+			return l_ins;
+		}
+
+		uint32_t str(simd_fp_t reg_src, gpr_t reg_base, int64_t imm)
+		{
+			// SIMD Unsigned Offset Store (128-bit Q-register)
+			// ARM Doc: size[31:30]=00 | 111 101 | opc[23:22]=10 | imm12[21:10] | Rn[9:5] | Rt[4:0]
+			uint32_t l_ins = 0b00'111101'10'000000000000'00000'00000;
+
+			uint32_t l_rt = reg_src & 0x1F;
+			uint32_t l_rn = reg_base & 0x1F;
+
+			// Q-registers are 128-bit (16 bytes). Scale = 2^4.
+			uint32_t l_scale = 4;
+			uint64_t l_byte_size = 1ULL << l_scale;
+
+			if (__builtin_expect(imm < 0, 0))
+			{
+				throw std::invalid_argument("SIMD STR: immediate offset cannot be negative.");
+			}
+			if (__builtin_expect((imm & (l_byte_size - 1)) != 0, 0))
+			{
+				throw std::invalid_argument("SIMD STR: immediate offset must be 16-byte aligned.");
+			}
+
+			uint64_t l_scaled_imm = imm >> l_scale;
+			if (__builtin_expect(l_scaled_imm > 0xFFF, 0))
+			{
+				throw std::invalid_argument("SIMD STR: immediate offset exceeds maximum encoded range.");
+			}
+
+			l_ins |= (l_scaled_imm << 10);
+			l_ins |= (l_rn << 5);
+			l_ins |= l_rt;
+
+			return l_ins;
+		}
+
 		uint32_t fmla_dp(simd_fp_t reg_dest,
 						 simd_fp_t reg_src1,
 						 simd_fp_t reg_src2,
@@ -182,6 +252,74 @@ namespace MiniJit::Asm
 			return l_ins;
 		}
 
-	}
+		uint32_t zip1(simd_fp_t reg_dest, simd_fp_t reg_src1, simd_fp_t reg_src2, arr_spec_t arr_spec)
+		{
+			// ZIP1 baseline (with Q=0 and size=00)
+			// ARM Doc: 0 | Q[30] | 001110 | size[23:22] | 0 | Rm[20:16] | 0 | 001 | 110 | Rn[9:5] | Rd[4:0]
+			uint32_t l_ins = 0b0'0'001110'00'0'00000'0'001'110'00000'00000;
 
+			// Apply arrangement specifier mapping (Q and size)
+			if (arr_spec == arr_spec_t::s2)
+			{
+				l_ins |= (0U << 30); // Q = 0 (64-bit vector)
+				l_ins |= (2U << 22); // size = 10 (32-bit elements)
+			}
+			else if (arr_spec == arr_spec_t::s4)
+			{
+				l_ins |= (1U << 30); // Q = 1 (128-bit vector)
+				l_ins |= (2U << 22); // size = 10 (32-bit elements)
+			}
+			else if (arr_spec == arr_spec_t::d2)
+			{
+				l_ins |= (1U << 30); // Q = 1 (128-bit vector)
+				l_ins |= (3U << 22); // size = 11 (64-bit elements)
+			}
+
+			// Apply registers
+			uint32_t l_rd = reg_dest & 0x1F;
+			uint32_t l_rn = reg_src1 & 0x1F;
+			uint32_t l_rm = reg_src2 & 0x1F;
+
+			l_ins |= (l_rm << 16);
+			l_ins |= (l_rn << 5);
+			l_ins |= l_rd;
+
+			return l_ins;
+		}
+
+		uint32_t zip2(simd_fp_t reg_dest, simd_fp_t reg_src1, simd_fp_t reg_src2, arr_spec_t arr_spec)
+		{
+			// ZIP2 baseline (with Q=0 and size=00)
+			// ARM Doc: 0 | Q[30] | 001110 | size[23:22] | 0 | Rm[20:16] | 0 | 011 | 110 | Rn[9:5] | Rd[4:0]
+			uint32_t l_ins = 0b0'0'001110'00'0'00000'0'011'110'00000'00000;
+
+			// Apply arrangement specifier mapping (Q and size)
+			if (arr_spec == arr_spec_t::s2)
+			{
+				l_ins |= (0U << 30); // Q = 0 (64-bit vector)
+				l_ins |= (2U << 22); // size = 10 (32-bit elements)
+			}
+			else if (arr_spec == arr_spec_t::s4)
+			{
+				l_ins |= (1U << 30); // Q = 1 (128-bit vector)
+				l_ins |= (2U << 22); // size = 10 (32-bit elements)
+			}
+			else if (arr_spec == arr_spec_t::d2)
+			{
+				l_ins |= (1U << 30); // Q = 1 (128-bit vector)
+				l_ins |= (3U << 22); // size = 11 (64-bit elements)
+			}
+
+			// Apply registers
+			uint32_t l_rd = reg_dest & 0x1F;
+			uint32_t l_rn = reg_src1 & 0x1F;
+			uint32_t l_rm = reg_src2 & 0x1F;
+
+			l_ins |= (l_rm << 16);
+			l_ins |= (l_rn << 5);
+			l_ins |= l_rd;
+
+			return l_ins;
+		}
+	}
 }
